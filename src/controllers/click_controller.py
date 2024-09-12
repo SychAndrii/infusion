@@ -1,11 +1,14 @@
 import os
 import click
-import shutil
 from src import __version__
 from .helpers import CustomCommand
+from langchain_openai import ChatOpenAI
+from src.models import InfusedSourceCode
+from src.errors import NotSourceCodeError
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
 
 class ClickController:
-
     @click.command(cls=CustomCommand)
     @click.argument(
         "file_paths", nargs=-1, type=click.Path()
@@ -26,18 +29,71 @@ class ClickController:
         output_dir = "fusion_output"
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
+
+        model = ChatOpenAI(model="gpt-4o")
+        parser = JsonOutputParser(pydantic_object=InfusedSourceCode)
+
+        prompt = PromptTemplate(
+            template="""
+            Your task is to add documentation to the provided code. Follow these rules:
+            - If the code uses structured comment formats (like JSDoc for JavaScript/TypeScript or JavaDoc for Java), use that style.
+            - If structured comments are not supported, add simple comments that describe parameters, return values, and any important details.
+            - Add comments only above functions and classes, not within the function bodies.
             
-        # Copy files to the output folder with the 'fusion_' prefix
+            You'll also be provided with the file name and its extension. Use the file extension to identify the programming language (e.g., 'index.ts' means TypeScript).
+            If you can't determine the programming language from the extension or the source code content return the word 'error'.
+
+            {format_instructions}
+            
+            File name:
+            {file_name}
+            
+            Code:
+            {initial_code}
+            """,
+            input_variables=["initial_code", "file_name"],
+            partial_variables={"format_instructions": parser.get_format_instructions()},
+        )
+
+        chain = prompt | model | parser
+
         for file_path in file_paths:
             try:
                 # Attempt to read the file and check if it's a text file
-                with open(file_path, "r", encoding="utf-8"):
+                with open(file_path, "r", encoding="utf-8") as file:
+                    source_code = file.read()
+
+                    # Generate the documented code
+                    infused_code = chain.invoke(
+                        {
+                            "initial_code": source_code,
+                            "file_name": os.path.basename(file_path),
+                        }
+                    )
+
+                    if infused_code['source_code_with_docs'] == 'error' or infused_code == 'error':
+                        raise NotSourceCodeError()
+
+                    # Get the base file name
                     base_name = os.path.basename(file_path)
+
+                    # Create the destination file path in the output directory
                     dest_file_path = os.path.join(output_dir, f"{base_name}")
-                    shutil.copyfile(file_path, dest_file_path)
+
+                    # Write the documented code to the new file
+                    with open(dest_file_path, "w", encoding="utf-8") as dest_file:
+                        dest_file.write(infused_code['source_code_with_docs'])
+
+                    click.echo(
+                        f"File '{file_path}' has been processed."
+                    )
             except UnicodeDecodeError:
-                # This happens if the file is not a valid text file
-                click.echo(f"Error: '{file_path}' is not a valid text file.", err=True)
+                click.echo(f"Error: '{file_path}' is not a text file.", err=True)
+            except NotSourceCodeError:
+                click.echo(f"Error: '{file_path}' was not detected as a file that contains source code.", err=True)
             except Exception as e:
                 # Handle other potential errors (e.g., permissions, IO issues)
-                click.echo(f"Error: Could not read '{file_path}'. {str(e)}", err=True)
+                click.echo(
+                    f"Error: Could not read '{file_path}'. {str(e)}.",
+                    err=True,
+                )
