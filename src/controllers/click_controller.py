@@ -1,10 +1,9 @@
 import click
 from src import __version__
-
+from .helpers import CustomCommand
 
 class ClickController:
-
-    @click.command()
+    @click.command(cls=CustomCommand)
     @click.option("-v", "--version", is_flag=True, help="Show the version and exit.")
     @click.pass_context
     def hello(ctx, version):
