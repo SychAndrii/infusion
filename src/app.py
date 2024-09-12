@@ -1,4 +1,4 @@
-from controllers import ClickController
+from src.controllers import ClickController
 
 controller = ClickController()
 
