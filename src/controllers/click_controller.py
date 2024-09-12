@@ -24,10 +24,17 @@ class ClickController:
         "output_dir",
         default="fusion_output",
         type=click.Path(),
-        help="Specify an output folder. If not provided, the output folder will be `fusion_output` in current directory.",
+        help="Specify an output folder. If not provided, the output folder will be `fusion_output` in current directory. Relative path will be relative to the directory, from which you are calling this tool. Absolute path is also supported.",
     )
     @click.pass_context
     def infuse_files(ctx, file_paths, version, output_dir):
+        """
+        Infusion is a command-line tool designed to help you generate documentation for your source code using advanced language models.
+        You provide file paths in your current directory, LLM modifies them to include documentation, and inserts them into the output folder.
+        
+        You provide multiple FILE_PATHS by separating them with spaces. Relative paths will be relative to the directory, from which you are calling this tool.
+        Absolute paths are also supported. 
+        """
         if version:
             click.echo(__version__)
             ctx.exit()
