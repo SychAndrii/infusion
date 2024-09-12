@@ -162,5 +162,4 @@ cython_debug/
 #.idea/
 
 # Default infusion output directory should be ignored 
-
 fushion_output/

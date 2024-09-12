@@ -3,6 +3,10 @@ import click
 import shutil
 from src import __version__
 from .helpers import CustomCommand
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate
 
 class ClickController:
 
@@ -26,15 +30,24 @@ class ClickController:
         output_dir = "fusion_output"
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-            
-        # Copy files to the output folder with the 'fusion_' prefix
+
+        model = ChatOpenAI(model="gpt-4")
+        messages = [
+            SystemMessage(content="Translate the following from English into Italian"),
+            HumanMessage(content="hi!"),
+        ]
+        result = model.invoke(messages)
+
+        parser = StrOutputParser()
+        translation = parser.invoke(result)
+        print('TRANSLATION:', translation)
+
         for file_path in file_paths:
             try:
                 # Attempt to read the file and check if it's a text file
                 with open(file_path, "r", encoding="utf-8"):
                     base_name = os.path.basename(file_path)
                     dest_file_path = os.path.join(output_dir, f"{base_name}")
-                    shutil.copyfile(file_path, dest_file_path)
             except UnicodeDecodeError:
                 # This happens if the file is not a valid text file
                 click.echo(f"Error: '{file_path}' is not a valid text file.", err=True)
