@@ -1,5 +1,6 @@
 import os
 import click
+import shutil
 from src import __version__
 from .helpers import CustomCommand
 
@@ -11,7 +12,7 @@ class ClickController:
     )  # Accept multiple file paths
     @click.option("-v", "--version", is_flag=True, help="Show the version and exit.")
     @click.pass_context
-    def output_files(ctx, file_paths, version):
+    def copy_files(ctx, file_paths, version):
         if version:
             click.echo(__version__)
             ctx.exit()
@@ -22,17 +23,18 @@ class ClickController:
                 click.echo(f"Error: Path '{file_path}' does not exist.", err=True)
                 ctx.exit(1)
 
+        output_dir = "fusion_output"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            
+        # Copy files to the output folder with the 'fusion_' prefix
         for file_path in file_paths:
             try:
                 # Attempt to read the file and check if it's a text file
-                with open(file_path, "r", encoding="utf-8") as f:
-                    contents = f.read()
-
-                    # Apply color and style to the header
-                    header = click.style(
-                        f"*** Contents of {file_path} ***", fg="blue", bold=True
-                    )
-                    click.echo(f"{header}:\n{contents}")
+                with open(file_path, "r", encoding="utf-8"):
+                    base_name = os.path.basename(file_path)
+                    dest_file_path = os.path.join(output_dir, f"{base_name}")
+                    shutil.copyfile(file_path, dest_file_path)
             except UnicodeDecodeError:
                 # This happens if the file is not a valid text file
                 click.echo(f"Error: '{file_path}' is not a valid text file.", err=True)

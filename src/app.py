@@ -3,4 +3,4 @@ from src.controllers import ClickController
 controller = ClickController()
 
 if __name__ == "__main__":
-    controller.hello()
+    controller.copy_files()
