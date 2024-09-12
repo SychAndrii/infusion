@@ -12,6 +12,10 @@ from langchain_core.exceptions import OutputParserException
 
 
 class ClickController:
+    """
+    The `ClickController` class manages the command-line interface (CLI) commands using
+    Click library.
+    """
 
     @click.command(cls=CustomCommand)
     @click.argument(
@@ -24,10 +28,17 @@ class ClickController:
         "output_dir",
         default="fusion_output",
         type=click.Path(),
-        help="Specify an output folder. If not provided, the output folder will be `fusion_output` in current directory.",
+        help="Specify an output folder. If not provided, the output folder will be `fusion_output` in current directory. Relative path will be relative to the directory, from which you are calling this tool. Absolute path is also supported.",
     )
     @click.pass_context
     def infuse_files(ctx, file_paths, version, output_dir):
+        """
+        Infusion is a command-line tool designed to help you generate documentation for your source code using advanced language models.
+        You provide file paths in your current directory, LLM modifies them to include documentation, and inserts them into the output folder.
+        
+        You provide multiple FILE_PATHS by separating them with spaces. Relative paths will be relative to the directory, from which you are calling this tool.
+        Absolute paths are also supported. 
+        """
         if version:
             click.echo(__version__)
             ctx.exit()
@@ -70,7 +81,8 @@ class ClickController:
         )
 
         chain = prompt | model | parser
-
+        click.echo(click.style("Processing started", fg="blue", bold=True))
+        
         for file_path in file_paths:
             try:
                 # Attempt to read the file and check if it's a text file
@@ -114,3 +126,5 @@ class ClickController:
             except Exception as e:
                 # Handle other potential errors (e.g., permissions, IO issues)
                 click.echo(f"Error: Could not read '{file_path}'. {str(e)}. Error type: {type(e).__name__}", err=True)
+
+        click.echo(click.style("Processing ended", fg="blue", bold=True))
