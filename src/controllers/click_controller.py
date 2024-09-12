@@ -12,7 +12,11 @@ from langchain_core.exceptions import OutputParserException
 
 
 class ClickController:
-
+    """
+    The `ClickController` class manages the command-line interface (CLI) commands using
+    Click library.
+    """
+    
     @click.command(cls=CustomCommand)
     @click.argument(
         "file_paths", nargs=-1, type=click.Path()
