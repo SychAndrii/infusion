@@ -1,10 +1,13 @@
 import click
+from src import __version__
+
 
 class ClickController:
+
     @click.command()
-    @click.option("--count", default=1, help="Number of greetings.")
-    @click.option("--name", prompt="Your name", help="The person to greet.")
-    def hello(count, name):
-        """Simple program that greets NAME for a total of COUNT times."""
-        for x in range(count):
-            click.echo(f"Hello {name}!")
+    @click.option("-v", "--version", is_flag=True, help="Show the version and exit.")
+    @click.pass_context
+    def hello(ctx, version):
+        if version:
+            click.echo(__version__)
+            ctx.exit()
