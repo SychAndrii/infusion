@@ -32,14 +32,15 @@ class ClickController:
             os.makedirs(output_dir)
 
         model = ChatOpenAI(model="gpt-4")
-        messages = [
-            SystemMessage(content="Translate the following from English into Italian"),
-            HumanMessage(content="hi!"),
-        ]
-        result = model.invoke(messages)
-
         parser = StrOutputParser()
-        translation = parser.invoke(result)
+
+        system_template = "Translate the following into {language}:"
+        prompt_template = ChatPromptTemplate.from_messages(
+            [("system", system_template), ("user", "{text}")]
+        )
+
+        chain = prompt_template | model | parser
+        translation = chain.invoke({"language": "italian", "text": "hi"})
         print('TRANSLATION:', translation)
 
         for file_path in file_paths:
