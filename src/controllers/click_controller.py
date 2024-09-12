@@ -16,7 +16,7 @@ class ClickController:
     The `ClickController` class manages the command-line interface (CLI) commands using
     Click library.
     """
-    
+
     @click.command(cls=CustomCommand)
     @click.argument(
         "file_paths", nargs=-1, type=click.Path()
@@ -81,7 +81,8 @@ class ClickController:
         )
 
         chain = prompt | model | parser
-
+        click.echo(click.style("Processing started", fg="blue", bold=True))
+        
         for file_path in file_paths:
             try:
                 # Attempt to read the file and check if it's a text file
@@ -125,3 +126,5 @@ class ClickController:
             except Exception as e:
                 # Handle other potential errors (e.g., permissions, IO issues)
                 click.echo(f"Error: Could not read '{file_path}'. {str(e)}. Error type: {type(e).__name__}", err=True)
+
+        click.echo(click.style("Processing ended", fg="blue", bold=True))
