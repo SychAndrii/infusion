@@ -50,7 +50,11 @@ class ClickController:
             )
             ctx.exit(1)
 
-        os.environ["OPENAI_API_KEY"] = getpass.getpass("Open AI API key:")
+        # Check if OPENAI_API_KEY is defined in the environment, if not, ask for it
+        if "OPENAI_API_KEY" not in os.environ:
+            os.environ["OPENAI_API_KEY"] = getpass.getpass("Open AI API key:")
+        else:
+            click.echo(click.style("Using API key from the environment", fg="blue", bold=True))
 
         # Ensure the output directory exists
         if not os.path.exists(output_dir):
@@ -82,7 +86,7 @@ class ClickController:
 
         chain = prompt | model | parser
         click.echo(click.style("Processing started", fg="blue", bold=True))
-        
+
         for file_path in file_paths:
             try:
                 # Attempt to read the file and check if it's a text file
