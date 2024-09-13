@@ -100,6 +100,8 @@ It won't be seen for security purposes.
 
 You can read about obtaining them [here](https://community.openai.com/t/how-to-generate-openai-api-key/401363).
 
+If you don't want to define your API key every time you execute the tool, you can also provide it inside of .env file in the root folder. You can look for the expected structure of .env file in the .env.example file in the root. 
+
 After we have entered open AI API key, the processing will begin, and after a few seconds we will 3 new files inside of `./example/output/` folder containing 3 files with generated documentation. 
 
 Console output:
