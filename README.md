@@ -6,7 +6,6 @@ A CLI tool for generating documentation for source code using advanced language 
 - [Description](#description)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Examples](#examples)
 - [Practical example](#practical-example)
 - [Options](#options)
 - [Features](#features)
