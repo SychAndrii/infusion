@@ -81,6 +81,7 @@ python -m src.app ./file1.js ./file2.py --output my_output_folder
 ## Practical example
 
 `example` inside of the root directory contains three input files in different languages. 
+
 ![alt text](example_folder_structure_1.png)
 
 You can see that these files contain little to no documentation. We take these files and ask LLM to add documentation to them. To do that, we will write the following command. 
@@ -100,13 +101,19 @@ It won't be seen for security purposes.
 You can read about obtaining them [here](https://community.openai.com/t/how-to-generate-openai-api-key/401363).
 
 After we have entered open AI API key, the processing will begin, and after a few seconds we will 3 new files inside of `./example/output/` folder containing 3 files with generated documentation. 
+
+Console output:
+
 ![alt text](example_console_output.png)
+
+Folder structure after Infusion executed:
+
 ![alt text](example_folder_structure_2.png)
 
 ## Options
 - `-v, --version`: Show the current version of the tool and exit.
-- `o, --output`: Specify the output folder for the processed files. If not provided, the default folder is **fusion_output** in the current directory.
-- `h, --help`: Show the help message with usage details and exit.
+- `-o, --output`: Specify the output folder for the processed files. If not provided, the default folder is **fusion_output** in the current directory.
+- `-h, --help`: Show the help message with usage details and exit.
 
 ## Features
 - Automatically generates structured comments and documentation for source code.
