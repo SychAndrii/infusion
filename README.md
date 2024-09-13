@@ -58,11 +58,19 @@ To use Infusion, run the following command, replacing FILE_PATHS with the paths 
 python -m src.app [OPTIONS] [FILE_PATHS]
 ```
 
-## Examples
-
 Process a single file:
 ```bash
 python -m src.app ./path/to/source.py
+```
+
+Process a single file and specify an output folder:
+```bash
+python -m src.app ./path/to/source.py --output my_output_folder
+```
+
+Process multiple files:
+```bash
+python -m src.app ./file1.js ./file2.py
 ```
 
 Process multiple files and specify an output folder:
@@ -72,188 +80,28 @@ python -m src.app ./file1.js ./file2.py --output my_output_folder
 
 ## Practical example
 
-Let's say we have a Java file with some source code `Program.java`:
-```java
-import java.util.*;
-import java.util.concurrent.*;
+`example` inside of the root directory contains three input files in different languages. 
+![alt text](example_folder_structure_1.png)
 
-public class TaskScheduler {
-    
-    private final ScheduledExecutorService executorService;
-    private final Map<String, ScheduledFuture<?>> scheduledTasks;
+You can see that these files contain little to no documentation. We take these files and ask LLM to add documentation to them. To do that, we will write the following command. 
 
-    public TaskScheduler(int poolSize) {
-        this.executorService = Executors.newScheduledThreadPool(poolSize);
-        this.scheduledTasks = new ConcurrentHashMap<>();
-    }
-
-    public void scheduleTask(String taskId, Runnable task, long initialDelay, long period, TimeUnit unit) {
-        if (scheduledTasks.containsKey(taskId)) {
-            throw new IllegalArgumentException("Task with ID " + taskId + " is already scheduled.");
-        }
-        ScheduledFuture<?> scheduledTask = executorService.scheduleAtFixedRate(task, initialDelay, period, unit);
-        scheduledTasks.put(taskId, scheduledTask);
-    }
-
-    public boolean cancelTask(String taskId) {
-        ScheduledFuture<?> scheduledTask = scheduledTasks.remove(taskId);
-        if (scheduledTask != null) {
-            return scheduledTask.cancel(false);
-        }
-        return false;
-    }
-
-    public void rescheduleTask(String taskId, Runnable task, long initialDelay, long period, TimeUnit unit) {
-        cancelTask(taskId);
-        scheduleTask(taskId, task, initialDelay, period, unit);
-    }
-
-    public void shutdown() {
-        executorService.shutdown();
-        try {
-            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
-                if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
-                    System.err.println("Executor did not terminate");
-                }
-            }
-        } catch (InterruptedException ie) {
-            executorService.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public static void main(String[] args) {
-        TaskScheduler scheduler = new TaskScheduler(2);
-        Runnable task = () -> System.out.println("Task executed at " + new Date());
-
-        scheduler.scheduleTask("task1", task, 0, 5, TimeUnit.SECONDS);
-
-        try {
-            Thread.sleep(15000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        scheduler.cancelTask("task1");
-        scheduler.shutdown();
-    }
-}
-```
-Let's provide absolute path to this file using our tool.
 ```bash
-python -m src.app C:\\Users\\andri\\Desktop\\examples\\Program.java
+python -m src.app ./example/input/DataProcessor.java ./example/input/DataProcessor.py ./example/input/DataProcessor.ts --output ./example/output
 ```
+This command assumes that you are inside of root of Infusion tool. If you are not, make sure to adjust the paths or change your current directory to the root.
+What we've done above is specified paths to the files which we want to be documented and a path to the folder, where we want to store the results.
 
-We will be asked to provide our `openAI` API key:
+Once you execute the command above, you will be asked to provide your openAI key:
 ```bash
 Open AI API key:
 ```
 It won't be seen for security purposes.
 
-After we have entered it, the processing will begin, and after a few seconds we will have `fusion_output` folder containing `Program.java` file with added comments:
-```java
-import java.util.*;
-import java.util.concurrent.*;
+You can read about obtaining them [here](https://community.openai.com/t/how-to-generate-openai-api-key/401363).
 
-/**
- * The class TaskScheduler is used to manage and schedule tasks using a thread pool.
- */
-public class TaskScheduler {
-
-    private final ScheduledExecutorService executorService;
-    private final Map<String, ScheduledFuture<?>> scheduledTasks;
-
-    /**
-     * The constructor for the TaskScheduler class.
-     * @param poolSize The number of threads in the pool.
-     */
-    public TaskScheduler(int poolSize) {
-        this.executorService = Executors.newScheduledThreadPool(poolSize);
-        this.scheduledTasks = new ConcurrentHashMap<>();
-    }
-
-    /**
-     * Schedule a task to be executed periodically.
-     * @param taskId The ID of the task.
-     * @param task The task to be executed.
-     * @param initialDelay The delay before the task is first executed.
-     * @param period The period between successive executions.
-     * @param unit The time unit of the initialDelay and period parameters.
-     */
-    public void scheduleTask(String taskId, Runnable task, long initialDelay, long period, TimeUnit unit) {
-        if (scheduledTasks.containsKey(taskId)) {
-            throw new IllegalArgumentException("Task with ID " + taskId + " is already scheduled.");
-        }
-        ScheduledFuture<?> scheduledTask = executorService.scheduleAtFixedRate(task, initialDelay, period, unit);
-        scheduledTasks.put(taskId, scheduledTask);
-    }
-
-    /**
-     * Cancel a scheduled task.
-     * @param taskId The ID of the task.
-     * @return True if the task was cancelled, false otherwise.
-     */
-    public boolean cancelTask(String taskId) {
-        ScheduledFuture<?> scheduledTask = scheduledTasks.remove(taskId);
-        if (scheduledTask != null) {
-            return scheduledTask.cancel(false);
-        }
-        return false;
-    }
-
-    /**
-     * Reschedule a task to be executed periodically.
-     * @param taskId The ID of the task.
-     * @param task The task to be executed.
-     * @param initialDelay The delay before the task is first executed.
-     * @param period The period between successive executions.
-     * @param unit The time unit of the initialDelay and period parameters.
-     */
-    public void rescheduleTask(String taskId, Runnable task, long initialDelay, long period, TimeUnit unit) {
-        cancelTask(taskId);
-        scheduleTask(taskId, task, initialDelay, period, unit);
-    }
-
-    /**
-     * Shutdown the task scheduler, stopping all tasks and shutting down the thread pool.
-     */
-    public void shutdown() {
-        executorService.shutdown();
-        try {
-            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
-                if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
-                    System.err.println("Executor did not terminate");
-                }
-            }
-        } catch (InterruptedException ie) {
-            executorService.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    /**
-     * The main method for the TaskScheduler class.
-     * @param args The command line arguments.
-     */
-    public static void main(String[] args) {
-        TaskScheduler scheduler = new TaskScheduler(2);
-        Runnable task = () -> System.out.println("Task executed at " + new Date());
-
-        scheduler.scheduleTask("task1", task, 0, 5, TimeUnit.SECONDS);
-
-        try {
-            Thread.sleep(15000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        scheduler.cancelTask("task1");
-        scheduler.shutdown();
-    }
-}
-```
+After we have entered open AI API key, the processing will begin, and after a few seconds we will 3 new files inside of `./example/output/` folder containing 3 files with generated documentation. 
+![alt text](example_console_output.png)
+![alt text](example_folder_structure_2.png)
 
 ## Options
 - `-v, --version`: Show the current version of the tool and exit.
