@@ -46,7 +46,8 @@ class ClickController:
         # Check if no files are provided
         if len(file_paths) == 0:
             click.echo(
-                "Error: No files provided. Please specify at least one file.", err=True
+                click.style("Error: No files provided. Please specify at least one file.", fg="red", bold=True), 
+                err=True
             )
             ctx.exit(1)
 
@@ -70,7 +71,6 @@ class ClickController:
             - Add comments only above functions and classes, not within the function bodies.
             
             You'll also be provided with the file name and its extension. Use the file extension to identify the programming language (e.g., 'index.ts' means TypeScript).
-            If you can't determine the programming language from the extension or the source code content return the word 'error'.
 
             {format_instructions}
             
@@ -85,10 +85,10 @@ class ClickController:
         )
 
         chain = prompt | model | parser
-        click.echo(click.style("Processing started", fg="blue", bold=True))
 
         for file_path in file_paths:
             try:
+                click.echo(click.style(f"Processing {file_path}", bold=True))
                 # Attempt to read the file and check if it's a text file
                 with open(file_path, "r", encoding="utf-8") as file:
                     source_code = file.read()
@@ -101,10 +101,7 @@ class ClickController:
                         }
                     )
 
-                    if (
-                        infused_code["source_code_with_docs"] == "error"
-                        or infused_code == "error"
-                    ):
+                    if (infused_code["error"] or infused_code['source_code_with_docs'] == ""):
                         raise NotSourceCodeError()
 
                     # Get the base file name
@@ -117,18 +114,33 @@ class ClickController:
                         dest_file.write(infused_code["source_code_with_docs"])
 
                     click.echo(
-                        f"File '{file_path}' has been processed and saved as '{dest_file_path}'."
+                        click.style(
+                            f"File '{file_path}' has been processed and saved as '{dest_file_path}'.",
+                            bold=True,
+                        )
                     )
-
             except UnicodeDecodeError:
-                click.echo(f"Error: '{file_path}' is not a text file.", err=True)
+                click.echo(
+                    click.style(f"Error: '{file_path}' is not a text file.", fg="red", bold=True), err=True
+                )
             except (NotSourceCodeError, OutputParserException):
                 click.echo(
-                    f"Error: '{file_path}' was not detected as a file that contains source code.",
+                    click.style(
+                        f"Error: '{file_path}' was not detected as a file that contains source code.", 
+                        fg="red",
+                        bold=True
+                    ),
                     err=True,
                 )
             except Exception as e:
                 # Handle other potential errors (e.g., permissions, IO issues)
-                click.echo(f"Error: Could not read '{file_path}'. {str(e)}. Error type: {type(e).__name__}", err=True)
+                click.echo(
+                    click.style(
+                        f"Error: Could not read '{file_path}'. {str(e)}. Error type: {type(e).__name__}",
+                        fg="red",
+                        bold=True
+                    ),
+                    err=True,
+                )
 
         click.echo(click.style("Processing ended", fg="blue", bold=True))

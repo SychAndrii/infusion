@@ -8,5 +8,8 @@ class InfusedSourceCode(BaseModel):
     typically produced by a language model. The `source_code_with_docs` field contains 
     the source code in string format, now enriched with comments or documentation.
     """
-    
-    source_code_with_docs: str = Field(description="Source code with generated comments")
+
+    source_code_with_docs: str = Field(description="Source code with generated comments. If file violates syntax of a programming language supplied - make this empty string.")
+    error: bool = Field(
+        description="If file violates syntax of a programming language supplied or is not a programming language at all - make this true"
+    )
