@@ -21,7 +21,7 @@ class ClickController:
     @click.argument(
         "file_paths", nargs=-1, type=click.Path()
     )  # Accept multiple file paths
-    @click.option("-v", "--version", is_flag=True, help="Show the version and exit.")
+    @click.option("-v", "--version", is_flag=True, help="Show the version.")
     @click.option(
         "-o",
         "--output",
