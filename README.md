@@ -20,29 +20,42 @@ It is particularly useful when you need structured comments (e.g., JSDoc for Jav
 
 ## Installation
 
-To install and run Infusion locally, clone the GitHub repository and install the necessary dependencies:
+To install and run Infusion locally, clone the GitHub repository.
 
 ```bash
 git clone https://github.com/your-username/infusion.git
 cd infusion
-pip install pipenv
 ```
 
+After that, you will have to set up a virtual environment and install all the dependencies. 
+
+If you are on Windows, use **PowerShell** to set up virtual environemnt using the command:
+```powershell
+./setup/setup.ps1
 ```
-python -m pipenv shell
+
+If you are on Mac / Linux, use the following command:
+```bash
+./setup/setup.sh
 ```
-This command will enter a virtual shell located inside of virtual environment. After this you can start using the CLI. After you done, you can close this virtual environment by writing:
+
+After you are done setting up virtual environment, you need to open it. You do this using the following command:
+```bash
+pipenv bash
 ```
+
+Once you are in the virtual environment, you can start using the **Infusion** utility. Read [this](#usage) section for usage. 
+
+Once you are done using the utility, you can exit the virtual environment by running:
+```bash
 exit
 ```
-
-Make sure you have your OpenAI API key ready, as it is required during execution.
 
 ## Usage
 
 To use Infusion, run the following command, replacing FILE_PATHS with the paths to the source code files you want to process:
 ```bash
-python -m src.app [OPTIONS] [FILE_PATHS]...
+python -m src.app [OPTIONS] [FILE_PATHS]
 ```
 
 ## Examples
