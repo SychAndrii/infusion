@@ -1,11 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f97984cfce62154b06c8aec42098b550a5d1c7f033fbf730a38846c88bf8fed4"
+            "sha256": "3ecfbd6b2b405412a0a13f03140d62be21dcd9cd28f784d435660ed5fd8247e8"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": "3.10.7"
+            "python_version": "3.10.6"
         },
         "sources": [
             {
@@ -579,20 +579,20 @@
         },
         "langchain-core": {
             "hashes": [
-                "sha256:5a5ad4e1c02d13e7021c026b2c7965069ad71ef67b018274cd52bab56e39143e",
-                "sha256:73d7b6f0b0212bc8069c3640d69e8d75faa51097784019ffa5c36c617c04acb0"
+                "sha256:71fff5cafa4b9c82a3a716e985f071383be452c35d8cc3169b3a393e6857fc99",
+                "sha256:c838ea0c0b73475a8e58ced3e306b6d926ef063721abd164f237c8664916f502"
             ],
             "markers": "python_version < '4.0' and python_full_version >= '3.8.1'",
-            "version": "==0.2.39"
+            "version": "==0.2.40"
         },
         "langchain-openai": {
             "hashes": [
-                "sha256:8e3d215803e157f26480c6108eb4333629832b1a0e746723060c24f93b8b78f4",
-                "sha256:ed7f16671ea0af177ac5f82d5645a746c5097c56f97b31798e5c07b5c84f0eed"
+                "sha256:3f7ef5c26d232685d3c367b7ec523799563c468725e4ca2e616d7c4a96bd16f3",
+                "sha256:7dc27f1dd50090a409fb5e970b07aaf3ff32c027cc1e8da1d1272f950e93e02c"
             ],
             "index": "pypi",
             "markers": "python_version < '4.0' and python_full_version >= '3.8.1'",
-            "version": "==0.1.23"
+            "version": "==0.1.24"
         },
         "langchain-text-splitters": {
             "hashes": [
@@ -604,11 +604,11 @@
         },
         "langsmith": {
             "hashes": [
-                "sha256:152202bd9e856f64d227ab36089965de1818c960fe822858d367241e12cda984",
-                "sha256:89ac51a1d76e8f2c12318c5d5e3f3f591cd2b8434ab861ddffbb04dc5f75e9d2"
+                "sha256:25499ca187b41bd89d784b272b97a8d76f60e0e21bdf20336e8a2aa6a9b23ac9",
+                "sha256:54d2785e301646c0988e0a69ebe4d976488c87b41928b358cb153b6ddd8db62b"
             ],
             "markers": "python_version < '4.0' and python_full_version >= '3.8.1'",
-            "version": "==0.1.119"
+            "version": "==0.1.120"
         },
         "multidict": {
             "hashes": [

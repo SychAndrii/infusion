@@ -4,7 +4,7 @@
 set -e
 
 # Define the required Python version.
-PYTHON_VERSION="3.10.7"
+PYTHON_VERSION="3.10.6"
 PIPENV_PATH="$HOME/.local/bin"
 
 echo "Starting setup..."
@@ -62,6 +62,12 @@ else
     echo "Pyenv is already installed."
 fi
 
+# Initialize Pyenv in this script session
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+
 # Install the required Python version using Pyenv
 if ! pyenv versions --bare | grep -q "^$PYTHON_VERSION$"; then
     echo "Installing Python $PYTHON_VERSION..."
@@ -73,7 +79,10 @@ fi
 # Set the local Python version for the project
 pyenv local $PYTHON_VERSION
 
-# Upgrade pip
+# **Force the shell to use the correct Python version immediately**
+pyenv shell $PYTHON_VERSION
+
+# Ensure pip is using the correct Python version
 echo "Upgrading pip..."
 python -m pip install --upgrade pip
 
@@ -99,9 +108,17 @@ if [ ! -f "$PIPENV_PATH/pipenv" ]; then
     exit 1
 fi
 
-# Use the full path to pipenv to avoid the PATH issue
-echo "Installing project dependencies using Pipenv..."
+# Check if a virtual environment already exists, and remove it if so
+if pipenv --venv &> /dev/null; then
+    echo "Removing existing virtual environment..."
+    rm -rf "$(pipenv --venv)"
+else
+    echo "No existing virtual environment found."
+fi
 
-"$PIPENV_PATH/pipenv" install
+# Use the full path to pipenv to avoid the PATH issue
+echo "Installing project dependencies using Pipenv with Python $PYTHON_VERSION..."
+
+"$PIPENV_PATH/pipenv" --python "$PYENV_ROOT/versions/$PYTHON_VERSION/bin/python" install
 
 echo "Setup complete! You can now use the CLI tool."

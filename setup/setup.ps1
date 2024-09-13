@@ -1,10 +1,10 @@
 # Requires PowerShell 5.0 or higher
 
-# Exit immediately if a command exits with a non-zero status.
+# Stop the script if any command fails.
 $ErrorActionPreference = "Stop"
 
 # Define the required Python version.
-$PYTHON_VERSION = "3.10.7"
+$PYTHON_VERSION = "3.10.6"
 
 Write-Host "Starting setup..."
 
@@ -23,14 +23,20 @@ function Install-Pyenv {
     $env:Path = "$env:PYENV\bin;$env:PYENV\shims;$env:Path"
 }
 
+# Install dependencies for Windows (using Chocolatey if required)
+if (-not (Get-Command choco.exe -ErrorAction SilentlyContinue)) {
+    Write-Host "Chocolatey not found. Installing Chocolatey..."
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+}
+
 # Install Git if not installed
 if (-not (Get-Command git.exe -ErrorAction SilentlyContinue)) {
     Write-Host "Git is not installed. Installing Git..."
-    # Download and install Git silently
-    $gitInstaller = "$env:TEMP\Git-setup.exe"
-    Invoke-WebRequest -Uri "https://github.com/git-for-windows/git/releases/download/v2.41.0.windows.1/Git-2.41.0-64-bit.exe" -OutFile $gitInstaller
-    Start-Process -FilePath $gitInstaller -ArgumentList '/VERYSILENT' -Wait
-    Remove-Item $gitInstaller
+    choco install git -y
+} else {
+    Write-Host "Git is already installed."
 }
 
 # Check if Pyenv is installed
@@ -51,6 +57,9 @@ if (-not (pyenv versions | Select-String -Pattern "^$PYTHON_VERSION$")) {
 # Set the local Python version for the project
 pyenv local $PYTHON_VERSION
 
+# Force the shell to use the correct Python version immediately
+pyenv shell $PYTHON_VERSION
+
 # Upgrade pip
 Write-Host "Upgrading pip..."
 python -m pip install --upgrade pip
@@ -60,7 +69,7 @@ if (-not (Get-Command pipenv.exe -ErrorAction SilentlyContinue)) {
     Write-Host "Installing Pipenv..."
     python -m pip install --user pipenv
 
-    # Correct the Pipenv path to Python310
+    # Correct the Pipenv path (adjust based on your Python version if necessary)
     $userPipPath = "$env:APPDATA\Python\Python310\Scripts"
     
     # Add Pipenv to User Environment Variable
@@ -86,9 +95,18 @@ if (-not (Test-Path "$userPipPath\pipenv.exe")) {
     exit 1
 }
 
-# Use the full path to pipenv to avoid the PATH issue
-Write-Host "Installing project dependencies using Pipenv..."
+# Check if a virtual environment already exists, and remove it if so
+$pipenvVenv = pipenv --venv 2>&1
+if ($pipenvVenv -and $pipenvVenv -notlike "*No virtualenv has been created*") {
+    Write-Host "Removing existing virtual environment..."
+    Remove-Item -Recurse -Force $pipenvVenv
+} else {
+    Write-Host "No existing virtual environment found."
+}
 
-Start-Process -NoNewWindow -FilePath "$userPipPath\pipenv.exe" -ArgumentList "install" -Wait
+# Use the full path to pipenv to avoid the PATH issue
+Write-Host "Installing project dependencies using Pipenv with Python $PYTHON_VERSION..."
+
+Start-Process -NoNewWindow -FilePath "$userPipPath\pipenv.exe" -ArgumentList "--python", "$(pyenv which python)", "install" -Wait
 
 Write-Host "Setup complete! You can now use the CLI tool."
