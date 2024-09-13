@@ -69,29 +69,30 @@ if (-not (Get-Command pipenv.exe -ErrorAction SilentlyContinue)) {
     Write-Host "Installing Pipenv..."
     python -m pip install --user pipenv
 
-    # Correct the Pipenv path (adjust based on your Python version if necessary)
-    $userPipPath = "$env:APPDATA\Python\Python310\Scripts"
-    
-    # Add Pipenv to User Environment Variable
-    if (Test-Path "$userPipPath\pipenv.exe") {
-        [Environment]::SetEnvironmentVariable("Path", "$userPipPath;$([Environment]::GetEnvironmentVariable('Path', 'User'))", "User")
+    # Find the path to the pipenv installation dynamically
+    $pipenvPath = Get-Command pipenv.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Path
+
+    if ($pipenvPath) {
+        Write-Host "Pipenv installed at $pipenvPath"
+
+        # Add Pipenv to the PATH environment variable
+        [Environment]::SetEnvironmentVariable("Path", "$pipenvPath;$([Environment]::GetEnvironmentVariable('Path', 'User'))", "User")
         
         # Update the current session's PATH
-        $env:Path = "$userPipPath;$env:Path"
-        
-        Write-Host "Pipenv installed at $userPipPath"
+        $env:Path = "$pipenvPath;$env:Path"
     } else {
-        Write-Host "Pipenv executable not found in $userPipPath. Please verify Pipenv installation."
+        Write-Host "Pipenv executable not found after installation. Please verify Pipenv installation."
         exit 1
     }
-
 } else {
     Write-Host "Pipenv is already installed."
 }
 
-# Verify if Pipenv exists in the correct path
-if (-not (Test-Path "$userPipPath\pipenv.exe")) {
-    Write-Host "Pipenv executable not found in $userPipPath. Please verify Pipenv installation."
+# Verify if Pipenv exists
+$pipenvPath = Get-Command pipenv.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Path
+
+if (-not $pipenvPath) {
+    Write-Host "Pipenv executable not found. Please verify Pipenv installation."
     exit 1
 }
 
@@ -107,6 +108,6 @@ if ($pipenvVenv -and $pipenvVenv -notlike "*No virtualenv has been created*") {
 # Use the full path to pipenv to avoid the PATH issue
 Write-Host "Installing project dependencies using Pipenv with Python $PYTHON_VERSION..."
 
-Start-Process -NoNewWindow -FilePath "$userPipPath\pipenv.exe" -ArgumentList "--python", "$(pyenv which python)", "install" -Wait
+Start-Process -NoNewWindow -FilePath $pipenvPath -ArgumentList "--python", "$(pyenv which python)", "install" -Wait
 
 Write-Host "Setup complete! You can now use the CLI tool."
