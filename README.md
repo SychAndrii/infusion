@@ -115,6 +115,7 @@ Folder structure after Infusion executed:
 - `-v, --version`: Show the current version of the tool and exit.
 - `-o, --output`: Specify the output folder for the processed files. If not provided, the default folder is **fusion_output** in the current directory.
 - `-h, --help`: Show the help message with usage details and exit.
+- `-u, --token-usage`: Show the number of tokens that were sent in the prompt and returned in the completion
 
 ## Features
 - Automatically generates structured comments and documentation for source code.
