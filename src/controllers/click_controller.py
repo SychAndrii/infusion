@@ -9,7 +9,28 @@ from src.errors import NotSourceCodeError
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.exceptions import OutputParserException
+from langchain_core.runnables import RunnableLambda
 
+
+def output_token_usage(response, token_usage_flag):
+    if token_usage_flag:
+        click.echo(
+            click.style(
+                f"Prompt Tokens: {response.response_metadata['token_usage']['prompt_tokens']}", 
+                fg="red", 
+                bold=True
+            ), 
+            err=True
+        )
+        click.echo( 
+            click.style(
+                f"Completion Tokens: {response.response_metadata['token_usage']['completion_tokens']}",
+                fg="red", 
+                bold=True
+            ), 
+            err=True
+        )
+    return response
 
 class ClickController:
     """
@@ -30,8 +51,9 @@ class ClickController:
         type=click.Path(),
         help="Specify an output folder. If not provided, the output folder will be `fusion_output` in current directory. Relative path will be relative to the directory, from which you are calling this tool. Absolute path is also supported.",
     )
+    @click.option("-u","--token-usage", is_flag=True, help="Show the number of tokens that were sent in the prompt and returned in the completion")
     @click.pass_context
-    def infuse_files(ctx, file_paths, version, output_dir):
+    def infuse_files(ctx, file_paths, version, output_dir, token_usage):
         """
         Infusion is a command-line tool designed to help you generate documentation for your source code using advanced language models.
         You provide file paths in your current directory, LLM modifies them to include documentation, and inserts them into the output folder.
@@ -84,7 +106,13 @@ class ClickController:
             partial_variables={"format_instructions": parser.get_format_instructions()},
         )
 
-        chain = prompt | model | parser
+        chain = (
+            prompt 
+            | model 
+            | RunnableLambda(lambda response: output_token_usage(response, token_usage)) 
+            | parser
+        )
+
 
         for file_path in file_paths:
             try:
