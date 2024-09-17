@@ -12,24 +12,23 @@ from langchain_core.exceptions import OutputParserException
 from langchain_core.runnables import RunnableLambda
 
 
-def output_token_usage(response, token_usage_flag):
-    if token_usage_flag:
-        click.echo(
-            click.style(
-                f"Prompt Tokens: {response.response_metadata['token_usage']['prompt_tokens']}", 
-                fg="red", 
-                bold=True
-            ), 
-            err=True
-        )
-        click.echo( 
-            click.style(
-                f"Completion Tokens: {response.response_metadata['token_usage']['completion_tokens']}",
-                fg="red", 
-                bold=True
-            ), 
-            err=True
-        )
+def output_token_usage(response):    
+    click.echo(
+        click.style(
+            f"Prompt Tokens: {response.response_metadata['token_usage']['prompt_tokens']}", 
+            fg="red", 
+            bold=True
+        ), 
+        err=True
+    )
+    click.echo( 
+        click.style(
+            f"Completion Tokens: {response.response_metadata['token_usage']['completion_tokens']}",
+            fg="red", 
+            bold=True
+        ), 
+        err=True
+    )
     return response
 
 class ClickController:
@@ -109,7 +108,7 @@ class ClickController:
         chain = (
             prompt 
             | model 
-            | RunnableLambda(lambda response: output_token_usage(response, token_usage)) 
+            | (RunnableLambda(output_token_usage) if token_usage else lambda x: x)
             | parser
         )
 
