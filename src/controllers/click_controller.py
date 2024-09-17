@@ -9,7 +9,7 @@ from src.errors import NotSourceCodeError
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.exceptions import OutputParserException
-from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
 
 def output_token_usage(response):    
@@ -108,7 +108,7 @@ class ClickController:
         chain = (
             prompt 
             | model 
-            | (RunnableLambda(output_token_usage) if token_usage else lambda x: x)
+            | (RunnableLambda(output_token_usage) if token_usage else RunnablePassthrough())
             | parser
         )
 
