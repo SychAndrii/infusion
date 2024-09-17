@@ -50,7 +50,7 @@ class ClickController:
         type=click.Path(),
         help="Specify an output folder. If not provided, the output folder will be `fusion_output` in current directory. Relative path will be relative to the directory, from which you are calling this tool. Absolute path is also supported.",
     )
-    @click.option("-u","--token-usage", is_flag=True, help="Show the number of tokens that were sent in the prompt and returned in the response")
+    @click.option("-u","--token-usage", is_flag=True, help="Show the number of tokens that were sent in the prompt and returned in the response.")
     @click.pass_context
     def infuse_files(ctx, file_paths, version, output_dir, token_usage):
         """
