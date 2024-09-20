@@ -17,6 +17,13 @@ Infusion is a command-line tool designed to assist developers by generating docu
 
 It is particularly useful when you need structured comments (e.g., JSDoc for JavaScript/TypeScript or JavaDoc for Java) or simple comments above functions and classes. Infusion saves the modified files to a specified output directory.
 
+## Features
+- Automatically generates structured comments and documentation for source code.
+- Supports multiple programming languages (identified via file extension).
+- Handles multiple files at once (no batch processing yet).
+- Allows custom output directories to store the processed files.
+- Allows to choose an OpenAI model to use.
+
 ## Installation
 
 To install and run Infusion locally, clone the GitHub repository.
@@ -112,12 +119,6 @@ Folder structure after Infusion executed:
 - `-m, --model`: Select the Open AI model to use when generating documentation. Defaults to `gpt-4o`. Available values: `gpt-4o`, `gpt-4o-mini`.
 - `-h, --help`: Show the help message with usage details and exit.
 - `-u, --token-usage`: Show the number of tokens that were sent in the prompt and returned in the response.
-
-## Features
-- Automatically generates structured comments and documentation for source code.
-- Supports multiple programming languages (identified via file extension).
-- Handles multiple files at once (no batch processing yet).
-- Allows custom output directories to store the processed files.
 
 ## License
 This project is licensed under the MIT License - see the `LICENSE` file for details.
