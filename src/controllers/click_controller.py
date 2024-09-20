@@ -6,6 +6,7 @@ from .helpers import CustomCommand
 from langchain_openai import ChatOpenAI
 from src.models import InfusedSourceCode
 from src.errors import NotSourceCodeError
+from src.services.logging import logging_service
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.exceptions import OutputParserException
@@ -66,9 +67,8 @@ class ClickController:
 
         # Check if no files are provided
         if len(file_paths) == 0:
-            click.echo(
-                click.style("Error: No files provided. Please specify at least one file.", fg="red", bold=True), 
-                err=True
+            logging_service.log_error(
+                "Error: No files provided. Please specify at least one file."
             )
             ctx.exit(1)
 
@@ -76,7 +76,7 @@ class ClickController:
         if "OPENAI_API_KEY" not in os.environ:
             os.environ["OPENAI_API_KEY"] = getpass.getpass("Open AI API key:")
         else:
-            click.echo(click.style("Using API key from the environment", fg="blue", bold=True))
+            logging_service.log_info("Using API key from the environment")
 
         # Ensure the output directory exists
         if not os.path.exists(output_dir):
@@ -112,10 +112,9 @@ class ClickController:
             | parser
         )
 
-
         for file_path in file_paths:
             try:
-                click.echo(click.style(f"Processing {file_path}", bold=True))
+                logging_service.log_info(f"Processing {file_path}")
                 # Attempt to read the file and check if it's a text file
                 with open(file_path, "r", encoding="utf-8") as file:
                     source_code = file.read()
@@ -140,34 +139,19 @@ class ClickController:
                     with open(dest_file_path, "w", encoding="utf-8") as dest_file:
                         dest_file.write(infused_code["source_code_with_docs"])
 
-                    click.echo(
-                        click.style(
-                            f"File '{file_path}' has been processed and saved as '{dest_file_path}'.",
-                            bold=True,
-                        )
+                    logging_service.log_info(
+                        f"File '{file_path}' has been processed and saved as '{dest_file_path}'."
                     )
             except UnicodeDecodeError:
-                click.echo(
-                    click.style(f"Error: '{file_path}' is not a text file.", fg="red", bold=True), err=True
-                )
+                logging_service.log_error(f"Error: '{file_path}' is not a text file.")
             except (NotSourceCodeError, OutputParserException):
-                click.echo(
-                    click.style(
-                        f"Error: '{file_path}' was not detected as a file that contains source code.", 
-                        fg="red",
-                        bold=True
-                    ),
-                    err=True,
+                logging_service.log_error(
+                    f"Error: '{file_path}' was not detected as a file that contains source code."
                 )
             except Exception as e:
                 # Handle other potential errors (e.g., permissions, IO issues)
-                click.echo(
-                    click.style(
-                        f"Error: Could not read '{file_path}'. {str(e)}. Error type: {type(e).__name__}",
-                        fg="red",
-                        bold=True
-                    ),
-                    err=True,
+                logging_service.log_error(
+                    f"Error: Could not read '{file_path}'. {str(e)}. Error type: {type(e).__name__}"
                 )
 
-        click.echo(click.style("Processing ended", fg="blue", bold=True))
+        logging_service.log_info("Processing ended")
