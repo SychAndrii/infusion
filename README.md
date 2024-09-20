@@ -109,7 +109,7 @@ Folder structure after Infusion executed:
 ## Options
 - `-v, --version`: Show the current version of the tool and exit.
 - `-o, --output`: Specify an output folder for files with generated documentation. If not provided, the output will be shown in stdout, and won't be saved to any file.
-- `-m, --model`: Select the Open AI model to use when generating documentation. Defaults to `gpt-4o`.
+- `-m, --model`: Select the Open AI model to use when generating documentation. Defaults to `gpt-4o`. Available values: `gpt-4o`, `gpt-4o-mini`.
 - `-h, --help`: Show the help message with usage details and exit.
 - `-u, --token-usage`: Show the number of tokens that were sent in the prompt and returned in the response.
 
