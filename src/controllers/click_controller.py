@@ -26,7 +26,6 @@ class ClickController:
         "-o",
         "--output",
         "output_dir",
-        default="fusion_output",
         type=click.Path(),
         help="Specify an output folder. If not provided, the output folder will be `fusion_output` in the current directory.",
     )
@@ -45,7 +44,7 @@ class ClickController:
         You provide multiple FILE_PATHS by separating them with spaces. Relative paths will be relative to the directory, from which you are calling this tool.
         Absolute paths are also supported.
         """
-        
+
         if version:
             ClickController.__print_version(ctx)
 
@@ -54,7 +53,9 @@ class ClickController:
             ClickController.__handle_zero_files(ctx)
 
         ClickController.__ensure_environment_is_set()
-        ClickController.__ensure_output_folder_exists(output_dir)
+
+        if output_dir:
+            ClickController.__ensure_output_folder_exists(output_dir)
 
         chain = ClickController.__get_infuse_files_chain(token_usage)
 
@@ -65,14 +66,19 @@ class ClickController:
                 infused_code = ClickController.__process_file_with_chain(
                     file_path, chain
                 )
-                dest_file_path = ClickController.__get_output_file_path(
-                    file_path, output_dir
-                )
-                ClickController.__save_contents_into_file(infused_code, dest_file_path)
 
-                logging_service.log_info(
-                    f"File '{file_path}' has been processed and saved as '{dest_file_path}'."
-                )
+                if output_dir:
+                    dest_file_path = ClickController.__get_output_file_path(
+                        file_path, output_dir
+                    )
+                    ClickController.__save_contents_into_file(infused_code, dest_file_path)
+                    logging_service.log_info(
+                        f"File '{file_path}' has been processed and saved as '{dest_file_path}'."
+                    )
+                else:
+                    logging_service.log_info("Processing ended")
+                    logging_service.log_info(f"\n{file_path}:\n", color="white")
+                    logging_service.log_info(f"{infused_code}\n\n")
             except UnicodeDecodeError:
                 logging_service.log_error(f"Error: '{file_path}' is not a text file.")
             except (NotSourceCodeError, OutputParserException):
@@ -84,8 +90,6 @@ class ClickController:
                 logging_service.log_error(
                     f"Error: Could not read '{file_path}'. {str(e)}. Error type: {type(e).__name__}"
                 )
-
-        logging_service.log_info("Processing ended")
 
     @staticmethod
     def __print_token_usage(llm_response):
