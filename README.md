@@ -67,7 +67,7 @@ Process multiple files without specifying every single one of them:
 pipenv run infsue ./folder/*
 ```
 
-Process multiple files and specify an output folder:
+Process multiple files and specify an output folder to save files to instead of printing them to stdout:
 ```bash
 pipenv run infsue ./file1.js ./file2.py --output my_output_folder
 ```
@@ -108,7 +108,7 @@ Folder structure after Infusion executed:
 
 ## Options
 - `-v, --version`: Show the current version of the tool and exit.
-- `-o, --output`: Specify the output folder for the processed files. If not provided, the default folder is **fusion_output** in the current directory.
+- `-o, --output`: Specify an output folder for files with generated documentation. If not provided, the output will be shown in stdout, and won't be saved to any file.
 - `-h, --help`: Show the help message with usage details and exit.
 - `-u, --token-usage`: Show the number of tokens that were sent in the prompt and returned in the response.
 
