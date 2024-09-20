@@ -17,6 +17,9 @@ Infusion is a command-line tool designed to assist developers by generating docu
 
 It is particularly useful when you need structured comments (e.g., JSDoc for JavaScript/TypeScript or JavaDoc for Java) or simple comments above functions and classes. Infusion saves the modified files to a specified output directory.
 
+If you want, you can also comment and share my blog post about this CLI tool here:
+https://dev.to/sych_andrii/infusion-v010-18nc
+
 ## Features
 - Automatically generates structured comments and documentation for source code.
 - Supports multiple programming languages (identified via file extension).
