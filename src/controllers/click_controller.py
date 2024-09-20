@@ -27,7 +27,7 @@ class ClickController:
         "--output",
         "output_dir",
         type=click.Path(),
-        help="Specify an output folder. If not provided, the output folder will be `fusion_output` in the current directory.",
+        help="Specify an output folder for files with generated documentation. If not provided, the output will be shown in stdout, and won't be saved to any file.",
     )
     @click.option(
         "-u",
