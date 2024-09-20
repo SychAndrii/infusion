@@ -30,3 +30,11 @@ class CustomCommand(click.Command):
             # Override the help text for the `-h` and `--help` options
             help_option.help = "Show the help message."
         return help_option
+
+    def format_usage(self, ctx, formatter):
+        """
+        Customizes the usage message displayed in the help output.
+        """
+        usage_message = f"Usage: pipenv run infuse [OPTIONS] [FILE_PATHS]..."
+        formatter.write(usage_message)
+        formatter.write("\n")
