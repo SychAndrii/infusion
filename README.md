@@ -28,34 +28,24 @@ cd infusion
 
 After that, you will have to set up a virtual environment and install all the dependencies. 
 
-If you are on Windows, use **PowerShell** to set up virtual environemnt using the command:
+If you are on **Windows**, use **PowerShell** to set up virtual environemnt using the command:
 ```powershell
 ./setup/setup.ps1
 ```
 
-If you are on Mac / Linux, use the following command:
+If you are on **Mac / Linux**, use the following command:
 ```bash
 ./setup/setup.sh
 ```
 
-After you are done setting up virtual environment, you need to open it. You do this using the following command:
+After you are done setting up virtual environment, you can use the Infusion tool by running:
 ```bash
-pipenv bash
-```
-
-Once you are in the virtual environment, you can start using the **Infusion** utility. Read [this](#usage) section for usage. 
-
-Once you are done using the utility, you can exit the virtual environment by running:
-```bash
-exit
+pipenv run infsue [OPTIONS] [FILE_PATHS]...
 ```
 
 ## Usage
 
-To use Infusion, run the following command, replacing FILE_PATHS with the paths to the source code files you want to process:
-```bash
-python -m src.app [OPTIONS] [FILE_PATHS]
-```
+To use Infusion, run the following command, replacing FILE_PATHS with the paths to the source code files you want to process.
 
 Process a single file:
 ```bash
@@ -70,6 +60,11 @@ python -m src.app ./path/to/source.py --output my_output_folder
 Process multiple files:
 ```bash
 python -m src.app ./file1.js ./file2.py
+```
+
+Process multiple files without specifying each one of them:
+```bash
+python -m src.app ./folder/*
 ```
 
 Process multiple files and specify an output folder:

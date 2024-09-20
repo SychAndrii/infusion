@@ -39,18 +39,13 @@ class ClickController:
     @click.pass_context
     def infuse_files(ctx, file_paths, version, output_dir, token_usage):
         """
-        Processes multiple source code files to add documentation using a language model.
+        Infusion is a command-line tool designed to help you generate documentation for your source code using advanced language models.
+        You provide file paths in your current directory, LLM modifies them to include documentation, and inserts them into the output folder.
 
-        Args:
-            ctx (Context): Click context object for command execution.
-            file_paths (tuple): Paths to the source code files to be infused.
-            version (bool): If True, display the version of the tool.
-            output_dir (str): Directory to save the infused files. Defaults to 'fusion_output'.
-            token_usage (bool): If True, display token usage statistics.
-
-        Returns:
-            None
+        You provide multiple FILE_PATHS by separating them with spaces. Relative paths will be relative to the directory, from which you are calling this tool.
+        Absolute paths are also supported.
         """
+        
         if version:
             ClickController.__print_version(ctx)
 
