@@ -23,6 +23,16 @@ class ClickController:
     @click.argument("file_paths", nargs=-1, type=click.Path())
     @click.option("-v", "--version", is_flag=True, help="Show the version.")
     @click.option(
+        "-m",
+        "--model",
+        type=click.Choice(
+            ["gpt-4o", "gpt-4o-mini"], case_sensitive=False
+        ),
+        default="gpt-4o",
+        show_default=True,
+        help="Select the Open AI model to use when generating documentation.",
+    )
+    @click.option(
         "-o",
         "--output",
         "output_dir",
@@ -36,7 +46,7 @@ class ClickController:
         help="Show the number of tokens used in the prompt and response.",
     )
     @click.pass_context
-    def infuse_files(ctx, file_paths, version, output_dir, token_usage):
+    def infuse_files(ctx, file_paths, version, output_dir, token_usage, model):
         """
         Infusion is a command-line tool designed to help you generate documentation for your source code using advanced language models.
         You provide file paths in your current directory, LLM modifies them to include documentation, and inserts them into the output folder.
@@ -57,7 +67,7 @@ class ClickController:
         if output_dir:
             ClickController.__ensure_output_folder_exists(output_dir)
 
-        chain = ClickController.__get_infuse_files_chain(token_usage)
+        chain = ClickController.__get_infuse_files_chain(token_usage, model)
 
         for file_path in file_paths:
             try:
@@ -86,7 +96,6 @@ class ClickController:
                     f"Error: '{file_path}' was not detected as a file that contains source code."
                 )
             except Exception as e:
-                # Handle other potential errors (e.g., permissions, IO issues)
                 logging_service.log_error(
                     f"Error: Could not read '{file_path}'. {str(e)}. Error type: {type(e).__name__}"
                 )
@@ -229,7 +238,7 @@ class ClickController:
         ctx.exit(1)
 
     @staticmethod
-    def __get_infuse_files_chain(token_usage):
+    def __get_infuse_files_chain(token_usage, model):
         """
         Creates and configures the chain for processing files with documentation infusion.
 
@@ -239,7 +248,7 @@ class ClickController:
         Returns:
             Runnable: The configured chain for file processing.
         """
-        model = ChatOpenAI(model="gpt-4")
+        model = ChatOpenAI(model=model)
         parser = JsonOutputParser(pydantic_object=InfusedSourceCode)
 
         prompt = PromptTemplate(
