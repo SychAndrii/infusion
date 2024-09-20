@@ -59,6 +59,11 @@ Process a single file:
 pipenv run infsue ./path/to/source.py
 ```
 
+Process a single file with a different openAI model:
+```bash
+pipenv run infsue -m gpt-4o-mini ./path/to/source.py
+```
+
 Process a single file and specify an output folder:
 ```bash
 pipenv run infsue ./path/to/source.py --output my_output_folder
