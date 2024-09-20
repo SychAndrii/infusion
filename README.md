@@ -49,27 +49,27 @@ To use Infusion, run the following command, replacing FILE_PATHS with the paths 
 
 Process a single file:
 ```bash
-python -m src.app ./path/to/source.py
+pipenv run infsue ./path/to/source.py
 ```
 
 Process a single file and specify an output folder:
 ```bash
-python -m src.app ./path/to/source.py --output my_output_folder
+pipenv run infsue ./path/to/source.py --output my_output_folder
 ```
 
 Process multiple files:
 ```bash
-python -m src.app ./file1.js ./file2.py
+pipenv run infsue ./file1.js ./file2.py
 ```
 
-Process multiple files without specifying each one of them:
+Process multiple files without specifying every single one of them:
 ```bash
-python -m src.app ./folder/*
+pipenv run infsue ./folder/*
 ```
 
 Process multiple files and specify an output folder:
 ```bash
-python -m src.app ./file1.js ./file2.py --output my_output_folder
+pipenv run infsue ./file1.js ./file2.py --output my_output_folder
 ```
 
 ## Practical example
@@ -81,7 +81,7 @@ python -m src.app ./file1.js ./file2.py --output my_output_folder
 You can see that these files contain little to no documentation. We take these files and ask LLM to add documentation to them. To do that, we will write the following command. 
 
 ```bash
-python -m src.app ./example/input/DataProcessor.java ./example/input/DataProcessor.py ./example/input/DataProcessor.ts --output ./example/output
+pipenv run infsue ./example/input/DataProcessor.java ./example/input/DataProcessor.py ./example/input/DataProcessor.ts --output ./example/output
 ```
 This command assumes that you are inside of root of Infusion tool. If you are not, make sure to adjust the paths or change your current directory to the root.
 What we've done above is specified paths to the files which we want to be documented and a path to the folder, where we want to store the results.
