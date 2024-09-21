@@ -50,6 +50,27 @@ If you are on **Mac / Linux**, use the following command:
 ./setup/setup.sh
 ```
 
+## WARNING
+If you are on Mac/Linux, the installation might not pick up environment variables in the same terminal session. If you get an error like:
+```bash
+root@0ce4b55b8504:/infusion/setup# pipenv run infuse
+bash: pipenv: command not found
+```
+
+Try doing this command:
+
+```bash
+source ~/.bashrc
+```
+
+And then try again:
+```bash
+root@0ce4b55b8504:/infusion/setup# pipenv run infuse
+bash: pipenv: command not found
+```
+
+It should work after that.
+
 After you are done setting up virtual environment, you can use the Infusion tool by running:
 ```bash
 pipenv run infsue [OPTIONS] [FILE_PATHS]...
