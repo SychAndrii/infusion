@@ -2,6 +2,8 @@
 
 A CLI tool for generating documentation for source code using advanced language models.
 
+![alt text](demo.gif)
+
 ## Table of Contents
 - [Description](#description)
 - [Installation](#installation)

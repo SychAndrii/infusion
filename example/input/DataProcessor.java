@@ -29,11 +29,9 @@ public class DataProcessor {
         }
     }
 
-    // Method to process JSON data with filtering and transformation
     private static JsonNode processData(JsonNode rootNode) {
-        // Transform JSON node, filter entries
         return rootNode.findValues("data").stream()
-                .filter(node -> node.get("value").asInt() > 100)  // Filtering data
+                .filter(node -> node.get("value").asInt() > 100)
                 .reduce((first, second) -> first)
                 .orElse(null);
     }
