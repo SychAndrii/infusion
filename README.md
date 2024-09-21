@@ -2,7 +2,7 @@
 
 A CLI tool for generating documentation for source code using advanced language models.
 
-[![asciicast](https://asciinema.org/a/ofZsEFmPOZeoN99V0wIh6amq4.svg)](https://asciinema.org/a/ofZsEFmPOZeoN99V0wIh6amq4)
+![alt text](demo.gif)
 
 ## Table of Contents
 - [Description](#description)
