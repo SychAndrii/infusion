@@ -19,6 +19,16 @@ Infusion is a command-line tool designed to assist developers by generating docu
 
 It is particularly useful when you need structured comments (e.g., JSDoc for JavaScript/TypeScript or JavaDoc for Java) or simple comments above functions and classes. Infusion saves the modified files to a specified output directory.
 
+If you want, you can also comment and share my blog post about this CLI tool here:
+https://dev.to/sych_andrii/infusion-v010-18nc
+
+## Features
+- Automatically generates structured comments and documentation for source code.
+- Supports multiple programming languages (identified via file extension).
+- Handles multiple files at once (no batch processing yet).
+- Allows custom output directories to store the processed files.
+- Allows to choose an OpenAI model to use.
+
 ## Installation
 
 To install and run Infusion locally, clone the GitHub repository.
@@ -52,6 +62,11 @@ To use Infusion, run the following command, replacing FILE_PATHS with the paths 
 Process a single file:
 ```bash
 pipenv run infsue ./path/to/source.py
+```
+
+Process a single file with a different openAI model:
+```bash
+pipenv run infsue -m gpt-4o-mini ./path/to/source.py
 ```
 
 Process a single file and specify an output folder:
@@ -114,12 +129,6 @@ Folder structure after Infusion executed:
 - `-m, --model`: Select the Open AI model to use when generating documentation. Defaults to `gpt-4o`. Available values: `gpt-4o`, `gpt-4o-mini`.
 - `-h, --help`: Show the help message with usage details and exit.
 - `-u, --token-usage`: Show the number of tokens that were sent in the prompt and returned in the response.
-
-## Features
-- Automatically generates structured comments and documentation for source code.
-- Supports multiple programming languages (identified via file extension).
-- Handles multiple files at once (no batch processing yet).
-- Allows custom output directories to store the processed files.
 
 ## License
 This project is licensed under the MIT License - see the `LICENSE` file for details.
