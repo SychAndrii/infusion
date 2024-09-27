@@ -1,11 +1,12 @@
 import os
+import sys
 import click
 import getpass
 from src import __version__
 from .helpers import CustomCommand
 from langchain_openai import ChatOpenAI
 from src.models import InfusedSourceCode
-from src.errors import NotSourceCodeError
+from src.errors import NotSourceCodeError, InvalidModelError
 from src.services.logging import logging_service
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
@@ -25,12 +26,9 @@ class ClickController:
     @click.option(
         "-m",
         "--model",
-        type=click.Choice(
-            ["gpt-4o", "gpt-4o-mini"], case_sensitive=False
-        ),
+        type=click.STRING,
         default="gpt-4o",
-        show_default=True,
-        help="Select the Open AI model to use when generating documentation.",
+        help="Select the Open AI model to use when generating documentation. Possible values: gpt-4o, gpt-4o-mini. Default value: gpt-4o",
     )
     @click.option(
         "-o",
@@ -54,51 +52,94 @@ class ClickController:
         You provide multiple FILE_PATHS by separating them with spaces. Relative paths will be relative to the directory, from which you are calling this tool.
         Absolute paths are also supported.
         """
+        try:
+            ClickController.__execute(
+                file_paths, version, output_dir, token_usage, model
+            )
+        except Exception as e:
+            logging_service.log_error(
+                f"Error: {str(e)}. Error type: {type(e).__name__}"
+            )
+            sys.exit(3)
 
+    @staticmethod
+    def __execute(file_paths, version, output_dir, token_usage, model):
         if version:
-            ClickController.__print_version(ctx)
+            ClickController.__print_version()
 
+        try:
+            ClickController.__validate(file_paths, output_dir, model)
+        except FileNotFoundError as e:
+            logging_service.log_error(str(e))
+            sys.exit(1)
+        except InvalidModelError:
+            logging_service.log_error(
+                "Error: Provided model is not supported. Supported models: gpt-4o, gpt-4o-mini."
+            )
+            sys.exit(1)
+
+        chain = ClickController.__get_infuse_files_chain(token_usage, model)
+        for file_path in file_paths:
+            ClickController.__process_file_path(file_path, chain, output_dir)
+
+    @staticmethod
+    def __check_files_exist(file_paths):
+        """
+        Checks if all specified files exist.
+
+        Args:
+            file_paths (list): A list of file paths to check.
+
+        Raises:
+            FileNotFoundError: If any of the specified files do not exist.
+        """
+        missing_files = [file_path for file_path in file_paths if not os.path.isfile(file_path)]
+        if missing_files:
+            missing_files_str = ', '.join(missing_files)
+            raise FileNotFoundError(f"The following files do not exist: {missing_files_str}")
+
+    @staticmethod
+    def __process_file_path(file_path, chain, output_dir):
+        try:
+            logging_service.log_info(f"Processing {file_path}")
+
+            infused_code = ClickController.__process_file_with_chain(
+                    file_path, chain
+            )
+
+            if output_dir:
+                dest_file_path = ClickController.__get_output_file_path(
+                    file_path, output_dir
+                )
+                ClickController.__save_contents_into_file(infused_code, dest_file_path)
+                logging_service.log_info(
+                        f"File '{file_path}' has been processed and saved as '{dest_file_path}'."
+                )
+            else:
+                logging_service.log_info("Processing ended")
+                logging_service.log_info(f"\n{file_path}:\n", color="white")
+                logging_service.log_info(f"{infused_code}\n\n")
+        except UnicodeDecodeError:
+            logging_service.log_error(f"Error: '{file_path}' is not a text file.")
+            sys.exit(2)
+        except (NotSourceCodeError, OutputParserException):
+            logging_service.log_error(
+                f"Error: '{file_path}' was not detected as a file that contains valid source code."
+            )
+            sys.exit(2)
+
+    @staticmethod 
+    def __validate(file_paths, output_dir, model):
         # Check if no files are provided
         if len(file_paths) == 0:
-            ClickController.__handle_zero_files(ctx)
+            ClickController.__handle_zero_files()
 
+        ClickController.__ensure_model_is_valid(model)
+        ClickController.__check_files_exist(file_paths)
         ClickController.__ensure_environment_is_set()
 
         if output_dir:
             ClickController.__ensure_output_folder_exists(output_dir)
-
-        chain = ClickController.__get_infuse_files_chain(token_usage, model)
-
-        for file_path in file_paths:
-            try:
-                logging_service.log_info(f"Processing {file_path}")
-
-                infused_code = ClickController.__process_file_with_chain(
-                    file_path, chain
-                )
-
-                if output_dir:
-                    dest_file_path = ClickController.__get_output_file_path(
-                        file_path, output_dir
-                    )
-                    ClickController.__save_contents_into_file(infused_code, dest_file_path)
-                    logging_service.log_info(
-                        f"File '{file_path}' has been processed and saved as '{dest_file_path}'."
-                    )
-                else:
-                    logging_service.log_info("Processing ended")
-                    logging_service.log_info(f"\n{file_path}:\n", color="white")
-                    logging_service.log_info(f"{infused_code}\n\n")
-            except UnicodeDecodeError:
-                logging_service.log_error(f"Error: '{file_path}' is not a text file.")
-            except (NotSourceCodeError, OutputParserException):
-                logging_service.log_error(
-                    f"Error: '{file_path}' was not detected as a file that contains source code."
-                )
-            except Exception as e:
-                logging_service.log_error(
-                    f"Error: Could not read '{file_path}'. {str(e)}. Error type: {type(e).__name__}"
-                )
 
     @staticmethod
     def __print_token_usage(llm_response):
@@ -195,6 +236,17 @@ class ClickController:
             os.makedirs(output_dir)
 
     @staticmethod
+    def __ensure_model_is_valid(model):
+        """
+        Checks if provided model is supported by the CLI tool.
+
+        Returns:
+            None
+        """
+        if model not in ["gpt-4o", "gpt-4o-mini"]:
+            raise InvalidModelError()
+
+    @staticmethod
     def __ensure_environment_is_set():
         """
         Checks if the required environment variables are set and prompts the user if they are missing.
@@ -208,7 +260,7 @@ class ClickController:
             logging_service.log_info("Using API key from the environment")
 
     @staticmethod
-    def __print_version(ctx):
+    def __print_version():
         """
         Prints the version of the tool and exits the program.
 
@@ -219,10 +271,10 @@ class ClickController:
             None
         """
         click.echo(__version__)
-        ctx.exit()
+        sys.exit()
 
     @staticmethod
-    def __handle_zero_files(ctx):
+    def __handle_zero_files():
         """
         Handles the scenario where no files are provided to the command.
 
@@ -235,7 +287,7 @@ class ClickController:
         logging_service.log_error(
             "Error: No files provided. Please specify at least one file."
         )
-        ctx.exit(1)
+        sys.exit(1)
 
     @staticmethod
     def __get_infuse_files_chain(token_usage, model):
