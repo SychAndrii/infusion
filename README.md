@@ -145,5 +145,12 @@ Folder structure after Infusion executed:
 - `-h, --help`: Show the help message with usage details and exit.
 - `-u, --token-usage`: Show the number of tokens that were sent in the prompt and returned in the response.
 
+## Status codes
+CLI tool will return a status code to the console using which you can debug the result of the program.
+- `0` - Program ended successfully.
+- `1` - Invalid options provided.
+- `2` - Invalid files provided.
+- `3` - Unknown error.
+
 ## License
 This project is licensed under the MIT License - see the `LICENSE` file for details.
