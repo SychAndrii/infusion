@@ -55,7 +55,7 @@ class ClickController:
         help="Show the number of tokens used in the prompt and response.",
     )
     @click.pass_context
-    def infuse_files(ctx, file_paths, version, output_dir, token_usage, model, stream):
+    async def infuse_files(ctx, file_paths, version, output_dir, token_usage, model, stream):
         """
         Infusion is a command-line tool designed to help you generate documentation for your source code using advanced language models.
         You provide file paths in your current directory, LLM modifies them to include documentation, and inserts them into the output folder.
@@ -64,7 +64,7 @@ class ClickController:
         Absolute paths are also supported.
         """
         try:
-            ClickController.__execute(
+            await ClickController.__execute(
                 file_paths, version, output_dir, token_usage, model, stream
             )
         except Exception as e:
@@ -74,7 +74,7 @@ class ClickController:
             sys.exit(3)
 
     @staticmethod
-    def __execute(file_paths, version, output_dir, token_usage, model, streaming):
+    async def __execute(file_paths, version, output_dir, token_usage, model, streaming):
         if version:
             ClickController.__print_version()
 
@@ -102,7 +102,7 @@ class ClickController:
 
                     buffer = ""
 
-                    for text in chain.stream(
+                    async for text in chain.astream(
                         {
                             "initial_code": source_code,
                             "file_name": os.path.basename(file_path),
@@ -339,19 +339,15 @@ class ClickController:
         sys.exit(1)
 
     @staticmethod
-    def __extract_country_names_streaming(input_stream):
-        for input in input_stream:
+    async def __extract_infused_code_streaming(input_stream):
+        """An async generator that operates on input streams."""
+        async for input in input_stream:
             if not isinstance(input, dict):
                 continue
-
-            if "error" not in input and "source_code_with_docs" not in input:
-                continue
-
             if "error" in input:
                 error = input["error"]
                 if error:
-                    raise Exception('kekw')
-
+                    raise Exception('Error occurred during streaming.')
             if "source_code_with_docs" in input:
                 source_code = input["source_code_with_docs"]
                 yield source_code
@@ -382,10 +378,7 @@ class ClickController:
         )
 
         chain = (
-            prompt
-            | model
-            | parser
-            | ClickController.__extract_country_names_streaming
+            prompt | model | parser | ClickController.__extract_infused_code_streaming
         )
         return chain
 
