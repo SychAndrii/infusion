@@ -226,8 +226,6 @@ class ClickController:
                 }
             )
 
-            print(infused_code)
-
             if infused_code["error"] or infused_code["source_code_with_docs"] == "":
                 raise NotSourceCodeError()
 

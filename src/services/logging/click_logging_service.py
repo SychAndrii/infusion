@@ -42,4 +42,4 @@ class ClickLoggingService:
         Returns:
             None
         """
-        click.echo(click.style(message, fg="orange", bold=True), err=True)
+        click.echo(click.style(message, fg="green", bold=True), err=True)
