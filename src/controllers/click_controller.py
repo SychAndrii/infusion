@@ -1,13 +1,12 @@
 import os
 import sys
 import click
-import hashlib
 import getpass
 from src import __version__
 from .helpers import CustomCommand
 from langchain_openai import ChatOpenAI
 from src.models import InfusedSourceCode
-from src.errors import NotSourceCodeError, InvalidModelError
+from src.errors import NotSourceCodeError, InvalidModelError, OutputDirWithStreamingError
 from src.services.logging import logging_service
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
@@ -23,8 +22,18 @@ class ClickController:
 
     @click.command(cls=CustomCommand)
     @click.argument("file_paths", nargs=-1, type=click.Path())
-    @click.option("-v", "--version", is_flag=True, help="Show the version.")
-    @click.option("-s", "--stream", is_flag=True, help="Show the version.")
+    @click.option(
+        "-v",
+        "--version",
+        is_flag=True,
+        help="Show the version.",
+    )
+    @click.option(
+        "-s",
+        "--stream",
+        is_flag=True,
+        help="See how LLM generated documentation for your file in real time. You cannot provide streaming and output_dir at the same time.",
+    )
     @click.option(
         "-m",
         "--model",
@@ -37,7 +46,7 @@ class ClickController:
         "--output",
         "output_dir",
         type=click.Path(),
-        help="Specify an output folder for files with generated documentation. If not provided, the output will be shown in stdout, and won't be saved to any file.",
+        help="Specify an output folder for files with generated documentation. If not provided, the output will be shown in stdout, and won't be saved to any file. You cannot provide streaming and output_dir at the same time.",
     )
     @click.option(
         "-u",
@@ -70,13 +79,18 @@ class ClickController:
             ClickController.__print_version()
 
         try:
-            ClickController.__validate(file_paths, output_dir, model)
+            ClickController.__validate(file_paths, output_dir, model, streaming)
         except FileNotFoundError as e:
             logging_service.log_error(str(e))
             sys.exit(1)
         except InvalidModelError:
             logging_service.log_error(
                 "Error: Provided model is not supported. Supported models: gpt-4o, gpt-4o-mini."
+            )
+            sys.exit(1)
+        except OutputDirWithStreamingError:
+            logging_service.log_error(
+                "Error: You cannot provide streaming and output_dir at the same time."
             )
             sys.exit(1)
 
@@ -86,7 +100,7 @@ class ClickController:
                 with open(file_path, "r", encoding="utf-8") as file:
                     source_code = file.read()
 
-                    buffer = ""  # Initialize an empty buffer to keep track of what has been printed
+                    buffer = ""
 
                     for text in chain.stream(
                         {
@@ -94,16 +108,14 @@ class ClickController:
                             "file_name": os.path.basename(file_path),
                         }
                     ):
-                        # Find the new content that is not already in the buffer
-                        new_content = text[len(buffer) :]  # Extract only the new part
+                        new_content = text[len(buffer):]
 
-                        if new_content.strip():  # Check if there is genuinely new content
-                            print(
-                                new_content, end=""
-                            )  # Print only the new part, keeping formatting
-                            buffer += new_content  # Update the buffer with the new content
-
-                # ClickController.__process_file_path(file_path, chain, output_dir)
+                        if new_content.strip():
+                            logging_service.log_info(
+                                new_content,
+                                nl=False
+                            )
+                            buffer += new_content
             else:
                 chain = ClickController.__get_infuse_files_chain(token_usage, model)
                 ClickController.__process_file_path(file_path, chain, output_dir)
@@ -155,10 +167,13 @@ class ClickController:
             sys.exit(2)
 
     @staticmethod 
-    def __validate(file_paths, output_dir, model):
+    def __validate(file_paths, output_dir, model, streaming):
         # Check if no files are provided
         if len(file_paths) == 0:
             ClickController.__handle_zero_files()
+
+        if output_dir and streaming:
+            raise OutputDirWithStreamingError()
 
         ClickController.__ensure_model_is_valid(model)
         ClickController.__check_files_exist(file_paths)

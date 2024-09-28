@@ -7,7 +7,7 @@ class ClickLoggingService:
     It allows logging informational, error, and debug messages with styled output.
     """
 
-    def log_info(self, message, color = "blue"):
+    def log_info(self, message, color = "blue", nl = True):
         """
         Logs an informational message to the console with blue text. This message is printed to stdout.
 
@@ -18,7 +18,7 @@ class ClickLoggingService:
         Returns:
             None
         """
-        click.echo(click.style(message, fg=color, bold=True))
+        click.echo(click.style(message, fg=color, bold=True), nl=nl)
 
     def log_error(self, message):
         """
