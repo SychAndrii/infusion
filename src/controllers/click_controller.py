@@ -1,6 +1,7 @@
 import os
 import sys
 import click
+import hashlib
 import getpass
 from src import __version__
 from .helpers import CustomCommand
@@ -23,12 +24,13 @@ class ClickController:
     @click.command(cls=CustomCommand)
     @click.argument("file_paths", nargs=-1, type=click.Path())
     @click.option("-v", "--version", is_flag=True, help="Show the version.")
+    @click.option("-s", "--stream", is_flag=True, help="Show the version.")
     @click.option(
         "-m",
         "--model",
         type=click.STRING,
         default="gpt-4o",
-        help="Select the Open AI model to use when generating documentation. Possible values: gpt-4o, gpt-4o-mini. Default value: gpt-4o",
+        help="Select the Open AI model to use when generating documentation. Possible values: gpt-4o, gpt-4o-mini, cohere. Default value: gpt-4o",
     )
     @click.option(
         "-o",
@@ -44,7 +46,7 @@ class ClickController:
         help="Show the number of tokens used in the prompt and response.",
     )
     @click.pass_context
-    def infuse_files(ctx, file_paths, version, output_dir, token_usage, model):
+    def infuse_files(ctx, file_paths, version, output_dir, token_usage, model, stream):
         """
         Infusion is a command-line tool designed to help you generate documentation for your source code using advanced language models.
         You provide file paths in your current directory, LLM modifies them to include documentation, and inserts them into the output folder.
@@ -54,7 +56,7 @@ class ClickController:
         """
         try:
             ClickController.__execute(
-                file_paths, version, output_dir, token_usage, model
+                file_paths, version, output_dir, token_usage, model, stream
             )
         except Exception as e:
             logging_service.log_error(
@@ -63,7 +65,7 @@ class ClickController:
             sys.exit(3)
 
     @staticmethod
-    def __execute(file_paths, version, output_dir, token_usage, model):
+    def __execute(file_paths, version, output_dir, token_usage, model, streaming):
         if version:
             ClickController.__print_version()
 
@@ -78,9 +80,33 @@ class ClickController:
             )
             sys.exit(1)
 
-        chain = ClickController.__get_infuse_files_chain(token_usage, model)
         for file_path in file_paths:
-            ClickController.__process_file_path(file_path, chain, output_dir)
+            if streaming:
+                chain = ClickController.__get_streaming_infuse_files_chain(model)
+                with open(file_path, "r", encoding="utf-8") as file:
+                    source_code = file.read()
+
+                    buffer = ""  # Initialize an empty buffer to keep track of what has been printed
+
+                    for text in chain.stream(
+                        {
+                            "initial_code": source_code,
+                            "file_name": os.path.basename(file_path),
+                        }
+                    ):
+                        # Find the new content that is not already in the buffer
+                        new_content = text[len(buffer) :]  # Extract only the new part
+
+                        if new_content.strip():  # Check if there is genuinely new content
+                            print(
+                                new_content, end=""
+                            )  # Print only the new part, keeping formatting
+                            buffer += new_content  # Update the buffer with the new content
+
+                # ClickController.__process_file_path(file_path, chain, output_dir)
+            else:
+                chain = ClickController.__get_infuse_files_chain(token_usage, model)
+                ClickController.__process_file_path(file_path, chain, output_dir)
 
     @staticmethod
     def __check_files_exist(file_paths):
@@ -136,7 +162,7 @@ class ClickController:
 
         ClickController.__ensure_model_is_valid(model)
         ClickController.__check_files_exist(file_paths)
-        ClickController.__ensure_environment_is_set()
+        ClickController.__ensure_environment_is_set(model)
 
         if output_dir:
             ClickController.__ensure_output_folder_exists(output_dir)
@@ -184,6 +210,8 @@ class ClickController:
                     "file_name": os.path.basename(file_path),
                 }
             )
+
+            print(infused_code)
 
             if infused_code["error"] or infused_code["source_code_with_docs"] == "":
                 raise NotSourceCodeError()
@@ -243,21 +271,27 @@ class ClickController:
         Returns:
             None
         """
-        if model not in ["gpt-4o", "gpt-4o-mini"]:
+        if model not in ["gpt-4o", "gpt-4o-mini", "cohere"]:
             raise InvalidModelError()
 
     @staticmethod
-    def __ensure_environment_is_set():
+    def __ensure_environment_is_set(model):
         """
         Checks if the required environment variables are set and prompts the user if they are missing.
 
         Returns:
             None
         """
-        if "OPENAI_API_KEY" not in os.environ:
-            os.environ["OPENAI_API_KEY"] = getpass.getpass("Open AI API key:")
+        if model != "cohere":
+            if "OPENAI_API_KEY" not in os.environ:
+                os.environ["OPENAI_API_KEY"] = getpass.getpass("Open AI API key:")
+            else:
+                logging_service.log_info("Using Open AI API key from the environment")
         else:
-            logging_service.log_info("Using API key from the environment")
+            if "COHERE_API_KEY" not in os.environ:
+                os.environ["COHERE_API_KEY"] = getpass.getpass("Open Cohere API key:")
+            else:
+                logging_service.log_info("Using Cohere API key from the environment")
 
     @staticmethod
     def __print_version():
@@ -290,6 +324,57 @@ class ClickController:
         sys.exit(1)
 
     @staticmethod
+    def __extract_country_names_streaming(input_stream):
+        for input in input_stream:
+            if not isinstance(input, dict):
+                continue
+
+            if "error" not in input and "source_code_with_docs" not in input:
+                continue
+
+            if "error" in input:
+                error = input["error"]
+                if error:
+                    raise Exception('kekw')
+
+            if "source_code_with_docs" in input:
+                source_code = input["source_code_with_docs"]
+                yield source_code
+
+    @staticmethod
+    def __get_streaming_infuse_files_chain(model):
+        model = ChatOpenAI(model=model, streaming=True)
+        parser = JsonOutputParser(pydantic_object=InfusedSourceCode)
+
+        prompt = PromptTemplate(
+            template="""Your task is to add documentation to the provided code. Follow these rules:
+            - If the code uses structured comment formats (like JSDoc for JavaScript/TypeScript or JavaDoc for Java), use that style.
+            - If structured comments are not supported, add simple comments that describe parameters, return values, and any important details.
+            - Add comments only above functions and classes, not within the function bodies.
+
+            You'll also be provided with the file name and its extension. Use the file extension to identify the programming language (e.g., 'index.ts' means TypeScript).
+
+            {format_instructions}
+
+            File name:
+            {file_name}
+
+            Code:
+            {initial_code}
+            """,
+            input_variables=["initial_code", "file_name"],
+            partial_variables={"format_instructions": parser.get_format_instructions()},
+        )
+
+        chain = (
+            prompt
+            | model
+            | parser
+            | ClickController.__extract_country_names_streaming
+        )
+        return chain
+
+    @staticmethod
     def __get_infuse_files_chain(token_usage, model):
         """
         Creates and configures the chain for processing files with documentation infusion.
@@ -300,6 +385,7 @@ class ClickController:
         Returns:
             Runnable: The configured chain for file processing.
         """
+
         model = ChatOpenAI(model=model)
         parser = JsonOutputParser(pydantic_object=InfusedSourceCode)
 
