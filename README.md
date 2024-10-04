@@ -5,13 +5,17 @@ A CLI tool for generating documentation for source code using advanced language 
 ![alt text](demo.gif)
 
 ## Table of Contents
-- [Description](#description)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Practical example](#practical-example)
-- [Options](#options)
-- [Features](#features)
-- [License](#license)
+- [Infusion](#infusion)
+  - [Table of Contents](#table-of-contents)
+  - [Description](#description)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [WARNING](#warning)
+  - [Usage](#usage)
+  - [Practical example](#practical-example)
+  - [Options](#options)
+  - [Status codes](#status-codes)
+  - [License](#license)
 
 ## Description
 
@@ -67,7 +71,7 @@ It should work after that.
 
 After you are done setting up virtual environment, you can use the Infusion tool by running:
 ```bash
-pipenv run infsue [OPTIONS] [FILE_PATHS]...
+pipenv run infuse [OPTIONS] [FILE_PATHS]...
 ```
 
 ## Usage
@@ -76,32 +80,32 @@ To use Infusion, run the following command, replacing FILE_PATHS with the paths 
 
 Process a single file:
 ```bash
-pipenv run infsue ./path/to/source.py
+pipenv run infuse ./path/to/source.py
 ```
 
 Process a single file with a different openAI model:
 ```bash
-pipenv run infsue -m gpt-4o-mini ./path/to/source.py
+pipenv run infuse -m gpt-4o-mini ./path/to/source.py
 ```
 
 Process a single file and specify an output folder:
 ```bash
-pipenv run infsue ./path/to/source.py --output my_output_folder
+pipenv run infuse ./path/to/source.py --output my_output_folder
 ```
 
 Process multiple files:
 ```bash
-pipenv run infsue ./file1.js ./file2.py
+pipenv run infuse ./file1.js ./file2.py
 ```
 
 Process multiple files without specifying every single one of them:
 ```bash
-pipenv run infsue ./folder/*
+pipenv run infuse ./folder/*
 ```
 
 Process multiple files and specify an output folder to save files to instead of printing them to stdout:
 ```bash
-pipenv run infsue ./file1.js ./file2.py --output my_output_folder
+pipenv run infuse ./file1.js ./file2.py --output my_output_folder
 ```
 
 ## Practical example
@@ -113,7 +117,7 @@ pipenv run infsue ./file1.js ./file2.py --output my_output_folder
 You can see that these files contain little to no documentation. We take these files and ask LLM to add documentation to them. To do that, we will write the following command. 
 
 ```bash
-pipenv run infsue ./example/input/DataProcessor.java ./example/input/DataProcessor.py ./example/input/DataProcessor.ts --output ./example/output
+pipenv run infuse ./example/input/DataProcessor.java ./example/input/DataProcessor.py ./example/input/DataProcessor.ts --output ./example/output
 ```
 This command assumes that you are inside of root of Infusion tool. If you are not, make sure to adjust the paths or change your current directory to the root.
 What we've done above is specified paths to the files which we want to be documented and a path to the folder, where we want to store the results.
