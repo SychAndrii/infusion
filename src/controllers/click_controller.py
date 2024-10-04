@@ -328,6 +328,11 @@ class ClickController:
 
         config = ClickController.__load_config()
 
+        if "openai_api_key" in config:
+            os.environ["OPENAI_API_KEY"] = config.get("openai_api_key")
+        elif "cohere_api_key" in config:
+            os.environ["COHERE_API_KEY"] = config.get("cohere_api_key")
+ 
         if model != "cohere":
             if "OPENAI_API_KEY" not in os.environ and "openai_api_key" not in config:
                 os.environ["OPENAI_API_KEY"] = getpass.getpass("Open AI API key:")
