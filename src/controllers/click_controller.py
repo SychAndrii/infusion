@@ -13,12 +13,18 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.exceptions import OutputParserException
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 class ClickController:
     """
     The `ClickController` class manages the command-line interface (CLI) commands using the Click library.
     It handles the infusion of source code files by adding documentation using a language model.
     """
+        
+    CONFIG_PATH = os.path.expanduser("~/.infuse-config.toml")
 
     @click.command(cls=CustomCommand)
     @click.argument("file_paths", nargs=-1, type=click.Path())
@@ -63,6 +69,12 @@ class ClickController:
         You provide multiple FILE_PATHS by separating them with spaces. Relative paths will be relative to the directory, from which you are calling this tool.
         Absolute paths are also supported.
         """
+
+        config = ClickController.__load_config()
+        model = model or config.get("model", "gpt-4o")
+        output_dir = output_dir or config.get("output")
+        stream = stream or config.get("stream")
+
         try:
             await ClickController.__execute(
                 file_paths, version, output_dir, token_usage, model, stream
@@ -72,6 +84,24 @@ class ClickController:
                 f"Error: {str(e)}. Error type: {type(e).__name__}"
             )
             sys.exit(3)
+
+    @staticmethod
+    def __load_config():
+        """
+        Loads configuration from a TOML file in the user's home directory.
+        If the file is missing or can't be parsed, it handles the error appropriately.
+
+        Returns:
+            dict: The configuration dictionary, or an empty dict if no valid config is found.
+        """
+        if os.path.exists(ClickController.CONFIG_PATH):
+            try:
+                with open(ClickController.CONFIG_PATH, 'rb') as file:
+                    return tomllib.load(file)
+            except tomllib.TOMLDecodeError:
+                logging_service.log_error(f"Error: Unable to parse the config file at {ClickController.CONFIG_PATH}. Exiting.")
+                sys.exit(1)
+        return {}
 
     @staticmethod
     async def __execute(file_paths, version, output_dir, token_usage, model, streaming):
@@ -295,13 +325,16 @@ class ClickController:
         Returns:
             None
         """
+
+        config = ClickController.__load_config()
+
         if model != "cohere":
-            if "OPENAI_API_KEY" not in os.environ:
+            if "OPENAI_API_KEY" not in os.environ and "openai_api_key" not in config:
                 os.environ["OPENAI_API_KEY"] = getpass.getpass("Open AI API key:")
             else:
                 logging_service.log_info("Using Open AI API key from the environment")
         else:
-            if "COHERE_API_KEY" not in os.environ:
+            if "COHERE_API_KEY" not in os.environ and "cohere_api_key" not in config:
                 os.environ["COHERE_API_KEY"] = getpass.getpass("Open Cohere API key:")
             else:
                 logging_service.log_info("Using Cohere API key from the environment")
